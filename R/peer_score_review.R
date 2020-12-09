@@ -45,7 +45,7 @@ peer_score_review = function(org, roster, form_review, prefix = "", suffix = "",
       ghpath = glue::glue("{as.character(rdf[x, 'aut_random'])}/{form_review}")
       rev_no = as.character(rdf[x, 'rev_no'])
 
-      feedback = purrr::safely(repo_get_file)(repo = repo, path = ghpath)
+      try({feedback = purrr::safely(repo_get_file)(repo = repo, path = ghpath)})
 
       status_msg(
         feedback,
@@ -55,38 +55,40 @@ peer_score_review = function(org, roster, form_review, prefix = "", suffix = "",
 
       if (succeeded(feedback)) {
         tc = textConnection(feedback[['result']])
-        scores = rmarkdown::yaml_front_matter(tc)[['params']]
-        scores[scores == "[INSERT SCORE]"] = NA
-        scores = purrr::map_chr(scores, ~ gsub("[][]", "", .x))
+        #scores = rmarkdown::yaml_front_matter(tc)[['params']]
+        #scores[scores == "[INSERT SCORE]"] = NA
+        #scores = purrr::map_chr(scores, ~ gsub("[][]", "", .x))
 
-        inp = stats::setNames(c(as.character(rdf[x, 'aut']), rev_no, scores),
-                              c("user", "rev_no", paste0("q", 1:length(scores))))
-        tibble::as_tibble(as.list(inp))
+        #inp = stats::setNames(c(as.character(rdf[x, 'aut']), rev_no, scores),
+         #                     c("user", "rev_no", paste0("q", 1:length(scores))))
+        #tibble::as_tibble(as.list(inp))
+        tc
 
       }
     }
   )
 
-  out_temp = tidyr::gather(
-    out_temp,
-    "q_name",
-    "q_value",
-    -.data$user,
-    -.data$rev_no
-  )
-  out_temp = tidyr::unite(out_temp, "new", c("rev_no", "q_name"))
-  out_temp = tidyr::spread(out_temp, .data$new, .data$q_value)
-  out = merge(out_temp, roster, all.y = T)
+  #out_temp = tidyr::gather(
+  #  out_temp,
+  #  "q_name",
+  #  "q_value",
+  #  -.data$user,
+  #  -.data$rev_no
+  #)
+  #out_temp = tidyr::unite(out_temp, "new", c("rev_no", "q_name"))
+  #out_temp = tidyr::spread(out_temp, .data$new, .data$q_value)
+  #out = merge(out_temp, roster, all.y = T)
 
-  out = out[, union(names(roster), names(out))]
-  out = out[order(out[['user_random']]),]
+  #out = out[, union(names(roster), names(out))]
+  #out = out[order(out[['user_random']]),]
 
-  if (write_csv) {
-    prefix_for_fname = sub("-$", "", prefix)
-    fname = glue::glue('revscores-{prefix_for_fname}.csv')
-    readr::write_csv(out, fname)
-    cli::cli_alert_success("Saved file {.val {fname}} to working directory.")
-  } else {
-    out
-  }
+  #if (write_csv) {
+  #  prefix_for_fname = sub("-$", "", prefix)
+   # fname = glue::glue('revscores-{prefix_for_fname}.csv')
+  #  readr::write_csv(out, fname)
+  #  cli::cli_alert_success("Saved file {.val {fname}} to working directory.")
+  #} else {
+  #  out
+  #}
+  out_temp
 }
